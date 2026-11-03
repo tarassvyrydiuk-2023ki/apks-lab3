@@ -1,0 +1,20 @@
+digraph rx {
+  rankdir=TB; bgcolor="white"; nodesep=1.3; ranksep=0.9; pad=0.3;
+  node [shape=ellipse, style=filled, fontname="DejaVu Sans", fontsize=15, fillcolor="#dbe9ff", color="#2b5aa8", penwidth=1.6, width=1.3, height=0.8];
+  edge [fontname="DejaVu Sans", fontsize=14, color="#333333", penwidth=1.3];
+  IDLE  [label="IDLE\nrx_busy = 0\nbaud-лічильник = 0", fillcolor="#d9f2d9", color="#2e7d32"];
+  START [label="START\nчекаємо mid"];
+  DATA  [label="DATA\nзчитування в mid"];
+  PARITY[label="PARITY", fillcolor="#fff3cd", color="#b58900"];
+  STOP  [label="STOP", fillcolor="#fde0e0", color="#b3261e"];
+  rst   [shape=circle, label="", width=0.2, fillcolor="black", color="black"];
+  rst -> IDLE [label="rst_n = 0"];
+  IDLE -> START   [label="спад RxD:\nrxd_p = 1 & rxd_s = 0"];
+  START -> IDLE   [label="mid & rxd_s = 1\n(завада, не старт)", color="#b3261e"];
+  START -> DATA   [label="mid & rxd_s = 0\n/ bitn ← 0"];
+  DATA -> DATA    [label="mid & bitn < 7\n/ shreg ← rxd_s & shreg[7:1]\n  bitn ← bitn + 1"];
+  DATA -> PARITY  [label="mid & bitn = 7\n& PARITY ≠ 0", color="#b58900"];
+  DATA -> STOP    [label="mid & bitn = 7\n& PARITY = 0"];
+  PARITY -> STOP  [label="mid\n/ par_bad ← rxd_s ⊕ очікуваний", color="#b58900"];
+  STOP -> IDLE    [label="mid\n/ rx_data ← shreg, rx_valid ← 1\n  frame_err ← not rxd_s\n  parity_err ← par_bad"];
+}

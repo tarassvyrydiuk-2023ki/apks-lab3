@@ -1,0 +1,23 @@
+digraph arch {
+  rankdir=LR; bgcolor="white"; nodesep=0.5; ranksep=1.0; pad=0.3; compound=true;
+  node [shape=box, style="filled,rounded", fontname="DejaVu Sans", fontsize=13, fillcolor="#dbe9ff", color="#2b5aa8", penwidth=1.6];
+  edge [fontname="DejaVu Sans", fontsize=11, penwidth=1.3];
+  subgraph cluster_top { label="uart_top  (CLK_FREQ, BAUD, PARITY)"; fontname="DejaVu Sans"; fontsize=14; style="rounded,dashed"; color="#555555";
+    subgraph cluster_tx { label="uart_tx"; style=rounded; color="#2e7d32"; fontname="DejaVu Sans";
+      txfsm [label="FSM передавача\nIDLE→START→DATA→PARITY→STOP\nзсувний регістр shreg, bitn"];
+      txbaud [label="uart_baud_gen\n(дільник 1/CLKS_PER_BIT)\ntick", fillcolor="#fff3cd", color="#b58900"];
+      txbaud -> txfsm [label="tick"]; txfsm -> txbaud [label="clr"];
+    }
+    subgraph cluster_rx { label="uart_rx"; style=rounded; color="#b3261e"; fontname="DejaVu Sans";
+      sync [label="синхронізатор\n2 тригери + rxd_p"];
+      rxfsm [label="FSM приймача\nIDLE→START→DATA→PARITY→STOP\nзсувний регістр shreg, bitn"];
+      rxbaud [label="uart_baud_gen\n(дільник 1/CLKS_PER_BIT)\nmid", fillcolor="#fff3cd", color="#b58900"];
+      sync -> rxfsm [label="rxd_s"]; rxbaud -> rxfsm [label="mid"]; rxfsm -> rxbaud [label="clr"];
+    }
+  }
+  tx_in  [shape=plaintext, label="tx_start\ntx_data[7:0]", style=""];
+  tx_out [shape=plaintext, label="txd\ntx_busy, tx_done", style=""];
+  rx_in  [shape=plaintext, label="rxd", style=""];
+  rx_out [shape=plaintext, label="rx_data[7:0], rx_valid\nrx_busy, frame_err, parity_err", style=""];
+  tx_in -> txfsm; txfsm -> tx_out; rx_in -> sync; rxfsm -> rx_out;
+}
